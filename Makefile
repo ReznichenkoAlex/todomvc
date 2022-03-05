@@ -8,4 +8,4 @@ changeSrcOwner:
 enterApp:
 	@docker exec -it docker_app_1 /bin/bash
 build:
-	@docker-compose -f ./docker/docker-compose.yaml up --build
+	@docker-compose -f ./docker/docker-compose.yaml up --force-recreate --build
