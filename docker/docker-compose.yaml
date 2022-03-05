@@ -1,19 +1,35 @@
-version: '3'
+version: '3.8'
 services:
   app:
     build: './php'
+    restart: always
     volumes:
       - '../src:/var/www/html'
+    depends_on:
+      - mysql
 
   nginx:
     image: nginx:stable-alpine
+    restart: always
     ports:
       - '8088:80'
     volumes:
       - '../src:/var/www/html'
       - './nginx/conf.d:/etc/nginx/conf.d'
+    depends_on:
+      - app
+      - mysql
 
   mysql:
     image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: 'QWE123rty'
+      MYSQL_ROOT_PASSWORD: QWE123rty
+      MYSQL_DATABASE: todomvc
+      MYSQL_USER: todo_user
+      MYSQL_PASSWORD: secret
+    ports:
+      - '5306:3306'
+    volumes:
+      - './volumes/mysql:/var/lib/mysql'
