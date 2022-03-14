@@ -5,6 +5,7 @@ namespace App;
 use App\Base\Controller\AbstractController;
 use App\Base\Router\Router;
 use App\Base\Utils\RouterReader\TestRouterReader;
+use App\Base\View\View;
 
 class Application
 {
@@ -22,9 +23,11 @@ class Application
 		session_start();
 		try {
 			$this->router->run();
-
 			$this->initController();
 			$this->initAction();
+
+			$view = new View();
+			$this->controller->setView($view);
 
 			$content = $this->controller->{$this->actionName}();
 
