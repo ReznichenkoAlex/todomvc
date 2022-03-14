@@ -5,7 +5,7 @@ namespace App\Base\Router;
 use App\Base\Utils\RouterReader\RouterReaderInterface;
 use Exception;
 
-class Router extends AbstractRouter
+class Router
 {
     private string                $controllerName;
     private string                $actionName;
@@ -13,16 +13,15 @@ class Router extends AbstractRouter
     private bool                  $processed = false;
     private RouterReaderInterface $routerReader;
 
-
     public function __construct(RouterReaderInterface $routerReader)
     {
         $this->routerReader = $routerReader;
         $this->fillRoutes();
     }
 
-    protected function fillRoutes()
+    private function fillRoutes()
     {
-        $this->routes = $this->routerReader->parseRoutes('pathToRouteFile');
+        $this->routes = $this->routerReader->parseRoutes();
     }
 
     public function run()
@@ -47,19 +46,9 @@ class Router extends AbstractRouter
         return $this->controllerName;
     }
 
-    public function setControllerName(string $controllerName): void
-    {
-        $this->controllerName = $controllerName;
-    }
-
     public function getActionName(): string
     {
         return $this->actionName;
-    }
-
-    public function setActionName(string $actionName): void
-    {
-        $this->actionName = $actionName;
     }
 
     private function emitPageNotFound()
