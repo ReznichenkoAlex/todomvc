@@ -5,6 +5,8 @@ services:
     restart: always
     volumes:
       - '../src:/var/www/html'
+    links:
+      - mysql
     depends_on:
       - mysql
 
@@ -31,5 +33,7 @@ services:
       MYSQL_PASSWORD: secret
     ports:
       - '5306:3306'
+    expose:
+      - '3306'
     volumes:
       - './volumes/mysql:/var/lib/mysql'
