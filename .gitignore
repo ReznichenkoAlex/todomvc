@@ -1,1 +1,4 @@
 .idea/
+vendor/
+volumes
+node_modules
