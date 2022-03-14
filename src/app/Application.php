@@ -6,6 +6,8 @@ use App\Base\Controller\AbstractController;
 use App\Base\Router\Router;
 use App\Base\Utils\RouterReader\TestRouterReader;
 use App\Base\View\View;
+use App\Model\User;
+use Exception;
 
 class Application
 {
@@ -28,11 +30,12 @@ class Application
 
 			$view = new View();
 			$this->controller->setView($view);
+			$this->initUser();
 
 			$content = $this->controller->{$this->actionName}();
 
 			echo $content;
-		} catch (\Exception $e) {
+		} catch (Exception $e) {
 			echo $e->getMessage();
 			die;
 		}
@@ -43,7 +46,7 @@ class Application
 	{
 		$controllerName = $this->router->getControllerName();
 		if (!class_exists($controllerName)) {
-			throw new \Exception('Controller ' . $controllerName . ' not found');
+			throw new Exception('Controller ' . $controllerName . ' not found');
 		}
 
 		$this->controller = new $controllerName();
@@ -53,10 +56,20 @@ class Application
 	{
 		$actionName = $this->router->getActionName();
 		if (!method_exists($this->controller, $actionName)) {
-			throw new \Exception('Action ' . $actionName . ' not found in ' . get_class($this->controller));
+			throw new Exception('Action ' . $actionName . ' not found in ' . get_class($this->controller));
 		}
 
 		$this->actionName = $actionName;
 	}
 
+	private function initUser()
+	{
+		$id = $_SESSION['id'] ?? null;
+		if ($id) {
+			$user = User::getById($id);
+			if ($user) {
+				$this->controller->setUser($user);
+			}
+		}
+	}
 }

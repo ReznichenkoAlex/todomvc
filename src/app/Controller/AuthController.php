@@ -23,11 +23,41 @@ class AuthController extends AbstractController
 			return $e->getMessage();
 		}
 
-		return $user->getId();
+		$_SESSION['id'] = $user->getId();
+		$this->redirect('/');
     }
 
     public function login()
     {
-        echo __METHOD__;
-    }
+		$name = trim($_POST['name']);
+
+		if ($name) {
+			$password = $_POST['password'];
+			$user = UserModel::getByName($name);
+			if (!$user) {
+				$this->view->assign('error', 'Неверный логин и пароль');
+			}
+
+			if ($user) {
+				if ($user->getPassword() != UserModel::getPasswordHash($password)) {
+					$this->view->assign('error', 'Неверный логин и пароль');
+				} else {
+					$_SESSION['id'] = $user->getId();
+					$this->redirect('/blog/index');
+				}
+			}
+		}
+
+		return $this->view->render('User/register.phtml', [
+			'user' => UserModel::getById((int) $_GET['id'])
+		]);
+	}
+
+
+	public function logoutAction()
+	{
+		session_destroy();
+
+		$this->redirect('/user/login');
+	}
 }
