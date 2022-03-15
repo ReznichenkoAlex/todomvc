@@ -11,6 +11,6 @@ class MainController extends AbstractController
 		if(!$this->user){
 			$this->redirect('/user/register');
 		}
-		return $this->render('index.html');
+		return $this->render('index.html.twig');
 	}
 }

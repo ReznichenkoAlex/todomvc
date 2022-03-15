@@ -5,7 +5,7 @@ namespace App;
 use App\Base\Controller\AbstractController;
 use App\Base\Router\Router;
 use App\Base\Utils\RouterReader\TestRouterReader;
-use App\Base\View\View;
+use App\Base\View\ViewTwig;
 use App\Model\User;
 use Exception;
 
@@ -28,7 +28,7 @@ class Application
 			$this->initController();
 			$this->initAction();
 
-			$view = new View();
+			$view = new ViewTwig();
 			$this->controller->setView($view);
 			$this->initUser();
 
