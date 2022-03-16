@@ -8,6 +8,9 @@ class MainController extends AbstractController
 {
     public function index()
     {
-        return $this->render('index.html');
-    }
+		if(!$this->user){
+			$this->redirect('/user/register');
+		}
+		return $this->render('index.html.twig');
+	}
 }
