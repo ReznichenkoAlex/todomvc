@@ -6,8 +6,11 @@ use App\Base\Controller\AbstractController;
 
 class MainController extends AbstractController
 {
-    public function index()
-    {
-		return $this->render('index.html.twig');
+	public function index()
+	{
+		if ($this->isUserSet()) {
+			return $this->render('index.html.twig');
+		}
+		$this->redirect('/user/login');
 	}
 }

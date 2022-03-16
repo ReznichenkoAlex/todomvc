@@ -4,6 +4,8 @@ namespace App\Base\Controller;
 use App\Base\Container\ContainerInterface;
 use App\Base\Utils\DoctrineManager;
 use App\Base\View\ViewTwig;
+use App\Model\User;
+use Doctrine\ORM\EntityManagerInterface;
 
 abstract class AbstractController
 {
@@ -46,5 +48,19 @@ abstract class AbstractController
 		foreach ($services as $id => $service) {
 			$this->container->set($id, $service);
 		}
+	}
+
+	public function isUserSet() : bool
+	{
+		$id = $_SESSION['id'] ?? null;
+		if($id) {
+			/** @var EntityManagerInterface $em */
+			$em = $this->getDoctrine();
+			$user = $em->getRepository(User::class)->find($id);
+			if ($user) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
