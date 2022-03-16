@@ -9,7 +9,7 @@ abstract class AbstractController
 {
 	protected ContainerInterface $container;
 
-	private function getSubscribedInterfaces(): array
+	private function getSubscribedServices(): array
 	{
 		return [
 			'twig' => ViewTwig::class,
@@ -30,18 +30,19 @@ abstract class AbstractController
 
 	public function getDoctrine()
 	{
-		return $this->container->get('doctrine');
+		$doctrineManager = $this->container->get('doctrine');
+		return $doctrineManager->getEntityManager();
 	}
 
-	public function render($tpl): string
+	public function render($tpl, $parameters = []): string
 	{
 		$twig = $this->container->get('twig');
-		return $twig->render($tpl);
+		return $twig->render($tpl, $parameters);
 	}
 
 	private function setServices()
 	{
-		$services = $this->getSubscribedInterfaces();
+		$services = $this->getSubscribedServices();
 		foreach ($services as $id => $service) {
 			$this->container->set($id, $service);
 		}
