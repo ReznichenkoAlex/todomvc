@@ -16,19 +16,24 @@ class DoctrineManager
 		'host'     => DB_HOST
 	];
 
-	private               $paths = [
+	private array         $paths = [
 		__DIR__ . "/../../Model/"
 	];
 	private EntityManager $entityManager;
 
 	public function __construct()
 	{
-		$config        = Setup::createAnnotationMetadataConfiguration(
+		$config              = Setup::createAnnotationMetadataConfiguration(
 			$this->paths,
 			false,
 			null,
 			null,
 			false);
 		$this->entityManager = EntityManager::create($this->dbParams, $config);
+	}
+
+	public function getEntityManager(): EntityManager
+	{
+		return $this->entityManager;
 	}
 }
