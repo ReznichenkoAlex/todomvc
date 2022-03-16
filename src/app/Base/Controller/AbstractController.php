@@ -2,26 +2,19 @@
 namespace App\Base\Controller;
 
 use App\Base\Container\ContainerInterface;
+use App\Base\Utils\DoctrineManager;
 use App\Base\View\ViewTwig;
 
 abstract class AbstractController
 {
 	protected ContainerInterface $container;
 
-	public function redirect($url)
-    {
-        header('Location: ' . $url);
-    }
-
-	public function setUser(User $user): void
+	private function getSubscribedInterfaces(): array
 	{
-		$this->user = $user;
-	}
-
-	public function render($tpl): string
-	{
-		$twig = $this->container->get('twig');
-		return $twig->render($tpl);
+		return [
+			'twig' => ViewTwig::class,
+			'doctrine' => DoctrineManager::class,
+		];
 	}
 
 	public function setContainer(ContainerInterface $container): void
@@ -30,18 +23,27 @@ abstract class AbstractController
 		$this->setServices();
 	}
 
+	public function redirect($url)
+    {
+        header('Location: ' . $url);
+    }
+
+	public function getDoctrine()
+	{
+		return $this->container->get('doctrine');
+	}
+
+	public function render($tpl): string
+	{
+		$twig = $this->container->get('twig');
+		return $twig->render($tpl);
+	}
+
 	private function setServices()
 	{
 		$services = $this->getSubscribedInterfaces();
 		foreach ($services as $id => $service) {
 			$this->container->set($id, $service);
 		}
-	}
-
-	private function getSubscribedInterfaces(): array
-	{
-		return [
-			'twig' => ViewTwig::class
-		];
 	}
 }
