@@ -1,23 +1,17 @@
 <?php
 namespace App\Base\Controller;
 
-use App\Base\View\ViewInterface;
-use App\Model\User;
+use App\Base\Container\ContainerInterface;
+use App\Base\View\ViewTwig;
 
 abstract class AbstractController
 {
-	protected ViewInterface $view;
-	protected ?User $user = null;
+	protected ContainerInterface $container;
 
 	public function redirect($url)
     {
         header('Location: ' . $url);
     }
-
-	public function setView(ViewInterface $view): void
-	{
-		$this->view = $view;
-	}
 
 	public function setUser(User $user): void
 	{
@@ -26,6 +20,28 @@ abstract class AbstractController
 
 	public function render($tpl): string
 	{
-		return $this->view->render($tpl);
+		$twig = $this->container->get('twig');
+		return $twig->render($tpl);
+	}
+
+	public function setContainer(ContainerInterface $container): void
+	{
+		$this->container = $container;
+		$this->setServices();
+	}
+
+	private function setServices()
+	{
+		$services = $this->getSubscribedInterfaces();
+		foreach ($services as $id => $service) {
+			$this->container->set($id, $service);
+		}
+	}
+
+	private function getSubscribedInterfaces(): array
+	{
+		return [
+			'twig' => ViewTwig::class
+		];
 	}
 }
