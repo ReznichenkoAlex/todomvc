@@ -5,6 +5,7 @@ namespace App\Model;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Mapping\OneToMany;
+use Doctrine\Common\Collections\Collection;
 
 /**
  * @ORM\Entity
@@ -14,22 +15,23 @@ class User
 {
 	/**
 	 * @ORM\Id
-	 * @ORM\Column(type="integer")
 	 * @ORM\GeneratedValue
+	 * @ORM\Column(type="integer")
 	 */
 	private $id;
+
 	/**
-	 * @ORM\Column(type="string", unique=true)
+	 * @ORM\Column(type="string", length=255)
 	 */
 	private $email;
+
 	/**
-	 * @ORM\Column(type="string")
+	 * @ORM\Column(type="string", length=255)
 	 */
 	private $password;
 
 	/**
-	 * One user has many tasks. This is the inverse side.
-	 * @OneToMany(targetEntity="Task", mappedBy="user")
+	 * @ORM\OneToMany(targetEntity=Task::class, mappedBy="user")
 	 */
 	private $tasks;
 
@@ -38,50 +40,61 @@ class User
 		$this->tasks = new ArrayCollection();
 	}
 
-	public function getId(): int
+	public function getId(): ?int
 	{
 		return $this->id;
 	}
 
-	public function setId($id): self
-	{
-		$this->id = $id;
-
-		return $this;
-	}
-
-	public function getEmail(): string
+	public function getEmail(): ?string
 	{
 		return $this->email;
 	}
 
-	public function setEmail($email): self
+	public function setEmail(string $email): self
 	{
 		$this->email = $email;
 
 		return $this;
 	}
 
-	public function getPassword(): string
+	public function getPassword(): ?string
 	{
 		return $this->password;
 	}
 
-	public function setPassword($password): self
+	public function setPassword(string $password): self
 	{
 		$this->password = $password;
 
 		return $this;
 	}
 
-	public function getTasks(): ArrayCollection
+	/**
+	 * @return Collection|Task[]
+	 */
+	public function getTasks(): Collection
 	{
 		return $this->tasks;
 	}
 
-	public function setTasks(ArrayCollection $tasks): self
+	public function addTask(Task $task): self
 	{
-		$this->tasks = $tasks;
+		if (!$this->tasks->contains($task)) {
+			$this->tasks[] = $task;
+			$task->setUser($this);
+		}
+
+		return $this;
+	}
+
+	public function removeTask(Task $task): self
+	{
+		if ($this->tasks->removeElement($task)) {
+			// set the owning side to null (unless already changed)
+			if ($task->getUser() === $this) {
+				$task->setUser(null);
+			}
+		}
 
 		return $this;
 	}

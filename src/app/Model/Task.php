@@ -15,70 +15,98 @@ class Task
 {
 	/**
 	 * @ORM\Id
-	 * @ORM\Column(type="integer")
 	 * @ORM\GeneratedValue
+	 * @ORM\Column(type="integer")
 	 */
 	private $id;
 
 	/**
-	 * Many tasks have one user. This is the owning side.
-	 * @ManyToOne(targetEntity="User", inversedBy="tasks")
-	 * @JoinColumn(name="task_id", referencedColumnName="id")
+	 * @ORM\Column(type="string", length=255)
 	 */
-	private $user;
+	private $uuid;
+
 	/**
-	 * @ORM\Column(type="string")
+	 * @ORM\Column(type="string", length=255)
 	 */
-	private $text;
+	private $title;
+
 	/**
 	 * @ORM\Column(type="boolean")
 	 */
-	private $isComplete;
+	private $isCompleted;
 
-	public function getId():int
+	/**
+	 * @ORM\Column(type="boolean")
+	 */
+	private $isDeleted;
+
+	/**
+	 * @ORM\ManyToOne(targetEntity=User::class, inversedBy="tasks")
+	 * @ORM\JoinColumn(nullable=false)
+	 */
+	private $user;
+
+	public function getId(): ?int
 	{
 		return $this->id;
 	}
 
-	public function setId($id): self
+	public function getUuid(): ?string
 	{
-		$this->id = $id;
+		return $this->uuid;
+	}
+
+	public function setUuid(string $uuid): self
+	{
+		$this->uuid = $uuid;
 
 		return $this;
 	}
 
-	public function getUser(): User
+	public function getTitle(): ?string
+	{
+		return $this->title;
+	}
+
+	public function setTitle(string $title): self
+	{
+		$this->title = $title;
+
+		return $this;
+	}
+
+	public function getIsCompleted(): ?bool
+	{
+		return $this->isCompleted;
+	}
+
+	public function setIsCompleted(bool $isCompleted): self
+	{
+		$this->isCompleted = $isCompleted;
+
+		return $this;
+	}
+
+	public function getIsDeleted(): ?bool
+	{
+		return $this->isDeleted;
+	}
+
+	public function setIsDeleted(bool $isDeleted): self
+	{
+		$this->isDeleted = $isDeleted;
+
+		return $this;
+	}
+
+	public function getUser(): ?User
 	{
 		return $this->user;
 	}
 
-	public function setUser($user): self
+	public function setUser(?User $user): self
 	{
 		$this->user = $user;
-
-		return $this;
-	}
-
-	public function getText()
-	{
-		return $this->text;
-	}
-
-	public function setText($text): self
-	{
-		$this->text = $text;
-
-		return $this;
-	}
-
-	public function getIsComplete()
-	{
-		return $this->isComplete;
-	}
-
-	public function setIsComplete($isComplete): self
-	{
-		$this->isComplete = $isComplete;
 
 		return $this;
 	}
