@@ -6,10 +6,15 @@ use App\Base\Utils\DoctrineManager;
 use App\Base\View\ViewTwig;
 use App\Model\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 
 abstract class AbstractController
 {
 	protected ContainerInterface $container;
+	/**
+	 * @var mixed|object
+	 */
+	protected $user;
 
 	private function getSubscribedServices(): array
 	{
@@ -25,18 +30,18 @@ abstract class AbstractController
 		$this->setServices();
 	}
 
-	public function redirect($url)
+	protected function redirect($url)
     {
         header('Location: ' . $url);
     }
 
-	public function getDoctrine()
+	protected function getDoctrine()
 	{
 		$doctrineManager = $this->container->get('doctrine');
 		return $doctrineManager->getEntityManager();
 	}
 
-	public function render($tpl, $parameters = []): string
+	protected function render($tpl, $parameters = []): string
 	{
 		$twig = $this->container->get('twig');
 		return $twig->render($tpl, $parameters);
@@ -50,7 +55,7 @@ abstract class AbstractController
 		}
 	}
 
-	public function isUserSet() : bool
+	protected function isUserSet() : bool
 	{
 		$id = $_SESSION['id'] ?? null;
 		if($id) {
@@ -58,9 +63,23 @@ abstract class AbstractController
 			$em = $this->getDoctrine();
 			$user = $em->getRepository(User::class)->find($id);
 			if ($user) {
+				$this->user = $user;
 				return true;
 			}
 		}
 		return false;
+	}
+
+	protected function jsonResponse($data)
+	{
+		Header('Content-Type: application/json; charset=utf-8');
+		return json_encode($data);
+	}
+
+	protected function emitUnauthorized()
+	{
+		header('HTTP/1.1 401 Unauthorized');
+		http_response_code('401');
+		throw new Exception('Unauthorized');
 	}
 }
