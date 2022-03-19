@@ -1,31 +1,83 @@
 <?php
+
 namespace App\Base\Controller;
 
-use App\Base\View\ViewInterface;
+use App\Base\Container\ContainerInterface;
+use App\Base\Utils\DoctrineManager;
+use App\Base\Utils\Exception\UnauthorizedException;
+use App\Base\View\ViewTwig;
 use App\Model\User;
+use Doctrine\ORM\EntityManagerInterface;
 
 abstract class AbstractController
 {
-	protected ViewInterface $view;
-	protected ?User $user = null;
+	protected ContainerInterface $container;
 
-	public function redirect($url)
-    {
-        header('Location: ' . $url);
-    }
+	protected User $user;
 
-	public function setView(ViewInterface $view): void
+	private function getSubscribedServices(): array
 	{
-		$this->view = $view;
+		return [
+			'twig'     => ViewTwig::class,
+			'doctrine' => DoctrineManager::class,
+		];
 	}
 
-	public function setUser(User $user): void
+	public function setContainer(ContainerInterface $container): void
 	{
-		$this->user = $user;
+		$this->container = $container;
+		$this->setServices();
 	}
 
-	public function render($tpl): string
+	protected function redirect($url)
 	{
-		return $this->view->render($tpl);
+		header('Location: ' . $url);
+	}
+
+	protected function getDoctrine(): EntityManagerInterface
+	{
+		$doctrineManager = $this->container->get('doctrine');
+		return $doctrineManager->getEntityManager();
+	}
+
+	protected function render($tpl, $parameters = []): string
+	{
+		$twig = $this->container->get('twig');
+		return $twig->render($tpl, $parameters);
+	}
+
+	private function setServices()
+	{
+		$services = $this->getSubscribedServices();
+		foreach ($services as $id => $service) {
+			$this->container->set($id, $service);
+		}
+	}
+
+	protected function isUserSet(): bool
+	{
+		$id = $_SESSION['id'] ?? null;
+		if ($id) {
+			$em   = $this->getDoctrine();
+			$userObject = $em->getRepository(User::class)->find($id);
+			if ($userObject) {
+				$this->user = $userObject;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	protected function jsonResponse($data)
+	{
+		Header('Content-Type: application/json; charset=utf-8');
+		return json_encode($data);
+	}
+
+	protected function emitUnauthorized()
+	{
+		header('HTTP/1.1 401 Unauthorized');
+		http_response_code('401');
+		throw new UnauthorizedException('Unauthorized');
 	}
 }

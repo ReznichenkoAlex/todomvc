@@ -26,10 +26,26 @@ class TestRouterReader implements RouterReaderInterface
                 'controller' => 'App\Controller\AuthController',
                 'action' => 'login'
             ],
-            '/admin' => [
-                'controller' => 'App\Controller\AdminController',
-                'action'     => 'index'
-            ]
+            '/api/get' => [
+                'controller' => 'App\Controller\ApiController',
+                'action'     => 'get',
+				'method' => 'GET'
+            ],
+            '/api/post' => [
+                'controller' => 'App\Controller\ApiController',
+                'action'     => 'post',
+				'method' => 'POST'
+            ],
+            '/api/patch' => [
+                'controller' => 'App\Controller\ApiController',
+                'action'     => 'patch',
+				'method' => 'PATCH'
+            ],
+            '/api/delete' => [
+                'controller' => 'App\Controller\ApiController',
+                'action'     => 'delete',
+				'method' => 'DELETE'
+            ],
         ];
     }
 }

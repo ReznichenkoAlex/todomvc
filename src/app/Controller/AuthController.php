@@ -4,53 +4,49 @@ namespace App\Controller;
 
 use App\Base\Controller\AbstractController;
 use App\Model\User;
+use Exception;
+use Doctrine\ORM\EntityManagerInterface;
 
 class AuthController extends AbstractController
 {
-    public function register()
-    {
-        $name = 'test_name' . rand(1,100);
-		$password = 'QWE123rty';
+	public function register()
+	{
 
-		$user = new User();
-		$user
-			->setName($name)
-			->setPassword(User::getPasswordHash($password));
+		$validForm = $this->validForm();
 
-		try{
-			$user->save();
-		} catch (\PDOException $e) {
-			return $e->getMessage();
+		if ($validForm['status']) {
+			try {
+				$this->createUser();
+				$this->redirect('/');
+			} catch (Exception $e) {
+				return $e->getMessage();
+			}
+		} else {
+			return $this->render('register.html.twig', [
+				'error' => $validForm['message']
+			]);
 		}
+	}
 
-		$_SESSION['id'] = $user->getId();
-		$this->redirect('/');
-    }
+	public function login()
+	{
+		$validForm = $this->validForm(true);
 
-    public function login()
-    {
-		$name = trim($_POST['name']);
-
-		if ($name) {
+		if ($validForm['status']) {
+			$user     = $this->getUser();
 			$password = $_POST['password'];
-			$user = UserModel::getByName($name);
-			if (!$user) {
-				$this->view->assign('error', 'Неверный логин и пароль');
-			}
-
-			if ($user) {
-				if ($user->getPassword() != UserModel::getPasswordHash($password)) {
-					$this->view->assign('error', 'Неверный логин и пароль');
-				} else {
-					$_SESSION['id'] = $user->getId();
-					$this->redirect('/blog/index');
-				}
+			if ($user->getPassword() !== $this->hashPassword($password)) {
+				$validForm['message'] = 'Неверная почта или пароль';
+			} else {
+				$_SESSION['id'] = $user->getId();
+				$this->redirect('/');
 			}
 		}
 
-		return $this->view->render('User/register.phtml', [
-			'user' => UserModel::getById((int) $_GET['id'])
+		return $this->render('register.html.twig', [
+			'error' => $validForm['message']
 		]);
+
 	}
 
 
@@ -59,5 +55,74 @@ class AuthController extends AbstractController
 		session_destroy();
 
 		$this->redirect('/user/login');
+	}
+
+	private function hashPassword(string $password): string
+	{
+		return sha1('asdfa' . $password);
+	}
+
+	private function validForm($loginForm = false): array
+	{
+		$error   = '';
+		$success = true;
+
+		if (empty($_POST['email'])) {
+			$error   = 'Почта не может быть пустой';
+			$success = false;
+		}
+
+		if (empty($_POST['password'])) {
+			$error   = 'Пароль не может быть пустым';
+			$success = false;
+		}
+
+		if (!empty($_POST['email']) && !empty($_POST['password'])) {
+			$user = $this->getUser();
+			if ($loginForm) {
+				if (!$user) {
+					$error   = 'Неверная почта или пароль';
+					$success = false;
+				}
+			} else {
+				if ($user) {
+					$error   = 'Пользователь с такой почтой уже существует';
+					$success = false;
+				}
+			}
+		}
+
+		if (empty($_POST['email']) && empty($_POST['password'])) {
+			$error   = '';
+			$success = false;
+		}
+
+		return ['message' => $error, 'status' => $success];
+	}
+
+	private function createUser()
+	{
+		$email    = trim($_POST['email']);
+		$password = trim($_POST['password']);
+
+		$em = $this->getDoctrine();
+		/** @var EntityManagerInterface $em */
+
+		$user = (new User())
+			->setEmail($email)
+			->setPassword($this->hashPassword($password));
+
+		$em->persist($user);
+		$em->flush();
+
+		$_SESSION['id'] = $user->getId();
+	}
+
+	private function getUser(): ?User
+	{
+		$email = $_POST['email'];
+		$em    = $this->getDoctrine();
+		/** @var EntityManagerInterface $em */
+		return $em->getRepository(User::class)->findOneBy(['email' => $email]);
 	}
 }
