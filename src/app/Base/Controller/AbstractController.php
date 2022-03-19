@@ -1,25 +1,24 @@
 <?php
+
 namespace App\Base\Controller;
 
 use App\Base\Container\ContainerInterface;
 use App\Base\Utils\DoctrineManager;
+use App\Base\Utils\Exception\UnauthorizedException;
 use App\Base\View\ViewTwig;
 use App\Model\User;
 use Doctrine\ORM\EntityManagerInterface;
-use Exception;
 
 abstract class AbstractController
 {
 	protected ContainerInterface $container;
-	/**
-	 * @var mixed|object
-	 */
-	protected $user;
+
+	protected User $user;
 
 	private function getSubscribedServices(): array
 	{
 		return [
-			'twig' => ViewTwig::class,
+			'twig'     => ViewTwig::class,
 			'doctrine' => DoctrineManager::class,
 		];
 	}
@@ -31,11 +30,11 @@ abstract class AbstractController
 	}
 
 	protected function redirect($url)
-    {
-        header('Location: ' . $url);
-    }
+	{
+		header('Location: ' . $url);
+	}
 
-	protected function getDoctrine()
+	protected function getDoctrine(): EntityManagerInterface
 	{
 		$doctrineManager = $this->container->get('doctrine');
 		return $doctrineManager->getEntityManager();
@@ -55,15 +54,14 @@ abstract class AbstractController
 		}
 	}
 
-	protected function isUserSet() : bool
+	protected function isUserSet(): bool
 	{
 		$id = $_SESSION['id'] ?? null;
-		if($id) {
-			/** @var EntityManagerInterface $em */
-			$em = $this->getDoctrine();
-			$user = $em->getRepository(User::class)->find($id);
-			if ($user) {
-				$this->user = $user;
+		if ($id) {
+			$em   = $this->getDoctrine();
+			$userObject = $em->getRepository(User::class)->find($id);
+			if ($userObject) {
+				$this->user = $userObject;
 				return true;
 			}
 		}
@@ -80,6 +78,6 @@ abstract class AbstractController
 	{
 		header('HTTP/1.1 401 Unauthorized');
 		http_response_code('401');
-		throw new Exception('Unauthorized');
+		throw new UnauthorizedException('Unauthorized');
 	}
 }
