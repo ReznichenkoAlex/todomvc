@@ -6,10 +6,13 @@ use App\Base\Controller\AbstractController;
 use App\Model\Task;
 use App\Model\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use ReflectionClass;
 
 class ApiController extends AbstractController
 {
+	const JSON_BODY = 'php://input';
+
 	public function get()
 	{
 		if (!$this->isUserSet()) {
@@ -27,12 +30,11 @@ class ApiController extends AbstractController
 			$this->emitUnauthorized();
 		}
 
-		$data = json_decode(file_get_contents("php://input"));
-		/** @var EntityManagerInterface $em */
-		$em = $this->getDoctrine();
+		$data = json_decode(file_get_contents(self::JSON_BODY));
+		$em   = $this->getDoctrine();
 		try {
 			$user = $em->getRepository(User::class)->find($_SESSION['id']);
-		} catch (\Exception $e) {
+		} catch (Exception $e) {
 			return $this->jsonResponse(['message' => $e->getMessage()]);
 		}
 
@@ -42,7 +44,41 @@ class ApiController extends AbstractController
 
 		return $this->jsonResponse($tasks);
 	}
-	
+
+	public function patch()
+	{
+		if (!$this->isUserSet()) {
+			$this->emitUnauthorized();
+		}
+
+		$data = json_decode(file_get_contents(self::JSON_BODY));
+
+		try {
+			$this->updateTask($data);
+		} catch (Exception $e) {
+			return $this->jsonResponse(['message' => $e->getMessage()]);
+		}
+
+		return $this->jsonResponse($this->getActiveTasks($this->user));
+	}
+
+	public function delete()
+	{
+		if (!$this->isUserSet()) {
+			$this->emitUnauthorized();
+		}
+
+		$data = json_decode(file_get_contents(self::JSON_BODY));
+
+		try {
+			$this->deleteTask($data->uuid);
+		} catch (Exception $e) {
+			return $this->jsonResponse(['message' => $e->getMessage()]);
+		}
+
+		return $this->jsonResponse($this->getActiveTasks($this->user));
+	}
+
 	private function getJsonArray(array $tasks): array
 	{
 		$reflection = new ReflectionClass(Task::class);
@@ -59,7 +95,7 @@ class ApiController extends AbstractController
 		$getters = [];
 		foreach ($methods as $method) {
 			$methodName = $method->getName();
-			if (str_contains($methodName, 'get') && $methodName !== 'getId' && $methodName !== 'getUser') {
+			if (str_contains($methodName, 'get') && $methodName !== 'getId' && $methodName !== 'getUser' && $methodName !== 'getIsDeleted') {
 				$getters[] = $method->getName();
 			}
 		}
@@ -70,7 +106,8 @@ class ApiController extends AbstractController
 	{
 		$keys = [];
 		foreach ($properties as $property) {
-			if ($property->getName() !== 'id' && $property->getName() !== 'user') {
+			$propertyName = $property->getName();
+			if ($propertyName !== 'id' && $propertyName !== 'user' && $propertyName !== 'isDeleted') {
 				$keys[] = $property->getName();
 			}
 		}
@@ -97,9 +134,7 @@ class ApiController extends AbstractController
 
 		$tasks = array_filter($tasks, function ($task) {
 			/** @var Task $task */
-			if (!$task->getIsDeleted()) {
-				return $task;
-			}
+			return !$task->getIsDeleted();
 		});
 
 		if ($tasks) {
@@ -115,9 +150,36 @@ class ApiController extends AbstractController
 			->setUser($user)
 			->setUuid($data->uuid)
 			->setTitle($data->title)
-			->setIsCompleted($data->isCompleted)
-			->setIsDeleted($data->isDeleted);
+			->setIsCompleted($data->isCompleted);
 		$em->persist($task);
+		$em->flush();
+	}
+
+	private function updateTask($data): void
+	{
+		$em   = $this->getDoctrine();
+		$repo = $em->getRepository(Task::class);
+
+		/** @var Task $task */
+		$task = $repo->findOneBy(['uuid' => $data->uuid]);
+
+
+		$task
+			->setTitle($data->title)
+			->setIsCompleted($data->isCompleted);
+
+		$em->persist($task);
+		$em->flush();
+	}
+
+	private function deleteTask($uuid)
+	{
+		$em = $this->getDoctrine();
+		$repo = $em->getRepository(Task::class);
+		/** @var Task $task */
+		$task = $repo->findOneBy(['uuid' => $uuid]);
+
+		$em->remove($task);
 		$em->flush();
 	}
 
