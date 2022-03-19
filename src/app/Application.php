@@ -14,7 +14,7 @@ class Application
 {
 	private Router             $router;
 	private AbstractController $controller;
-	private string             $actionName;
+	private string             $action;
 	private ContainerInterface $container;
 
 	public function __construct()
@@ -31,7 +31,7 @@ class Application
 			$this->initController();
 			$this->initAction();
 
-			$content = $this->controller->{$this->actionName}();
+			$content = $this->controller->{$this->action}();
 
 			echo $content;
 		} catch (Exception $e) {
@@ -60,7 +60,7 @@ class Application
 			throw new AppException('Action ' . $actionName . ' not found in ' . get_class($this->controller));
 		}
 
-		$this->actionName = $actionName;
+		$this->action = $actionName;
 	}
 
 	private function emitServiceUnavailable(): void
