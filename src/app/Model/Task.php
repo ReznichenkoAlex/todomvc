@@ -36,7 +36,7 @@ class Task
 	private $isCompleted;
 
 	/**
-	 * @ORM\Column(type="boolean")
+	 * @ORM\Column(type="boolean", nullable=true)
 	 */
 	private $isDeleted;
 
