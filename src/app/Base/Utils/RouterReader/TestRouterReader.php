@@ -36,6 +36,16 @@ class TestRouterReader implements RouterReaderInterface
                 'action'     => 'post',
 				'method' => 'POST'
             ],
+            '/api/patch' => [
+                'controller' => 'App\Controller\ApiController',
+                'action'     => 'patch',
+				'method' => 'PATCH'
+            ],
+            '/api/delete' => [
+                'controller' => 'App\Controller\ApiController',
+                'action'     => 'delete',
+				'method' => 'DELETE'
+            ],
         ];
     }
 }
