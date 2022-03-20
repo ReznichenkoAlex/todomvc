@@ -27,7 +27,7 @@ class Router
 	public function run()
 	{
 		if (!$this->processed) {
-			$path = parse_url($_SERVER['REQUEST_URI'])['path'];
+			$path = trim(parse_url($_SERVER['REQUEST_URI'])['path'], '/.');
 
 			if (isset($this->routes[$path])) {
 				if (isset($this->routes[$path]['method']) && $this->routes[$path]['method'] !== $_SERVER['REQUEST_METHOD']) {
