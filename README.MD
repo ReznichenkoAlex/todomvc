@@ -13,3 +13,5 @@
 * run ```make build``` 
 
 If installation will be success, you can use app on localhost:8088
+
+Решение задачи 1 находится в Task1.MD
