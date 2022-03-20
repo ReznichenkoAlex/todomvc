@@ -5,28 +5,30 @@ $(function ($) {
 
 		render: function () {
 			$('.todo-list').html(this.todoTemplate(this.todoItems));
+
 			const todoCount = this.todoItems.length;
 			const activeTodoCount = this.getActiveTodos().length;
-			$('.footer').html(this.footerTemplate({
+			$('.footer').toggle(todoCount > 0).html(this.footerTemplate({
 				activeTodoCount: activeTodoCount,
 				completedTodos: todoCount - activeTodoCount
 			}));
+
 		},
 
 		deleteTask: function (e) {
-				const uuid = $(e.target).closest('li').data().id;
-				const index = this.getIndex(uuid);
-				this.todoItems.splice(index, 1);
-				localStorage.setItem('data', JSON.stringify(this.todoItems));
-				$.ajax({
-						url: '/api/delete',
-						method: 'DELETE',
-						data: JSON.stringify({uuid: uuid}),
-						contentType: 'application/json',
-						processData: false,
-					}
-				)
-				this.render();
+			const uuid = $(e.target).closest('li').data().id;
+			const index = this.getIndex(uuid);
+			this.todoItems.splice(index, 1);
+			localStorage.setItem('data', JSON.stringify(this.todoItems));
+			$.ajax({
+					url: '/api/delete',
+					method: 'DELETE',
+					data: JSON.stringify({uuid: uuid}),
+					contentType: 'application/json',
+					processData: false,
+				}
+			)
+			this.render();
 		}, run: async function () {
 			this.todoItems = await this.getTodos();
 			this.todoTemplate = Handlebars.compile($('#todo-template').html());
