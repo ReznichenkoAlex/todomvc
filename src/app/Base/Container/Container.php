@@ -48,9 +48,8 @@ class Container implements ContainerInterface
 		}
 
 		$constructor = $reflection->getConstructor();
-
 		if (is_null($constructor)) {
-			$reflection->newInstance();
+			return $reflection->newInstance();
 		}
 
 		$parameters   = $constructor->getParameters();
