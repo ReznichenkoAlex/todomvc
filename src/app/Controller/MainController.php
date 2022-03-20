@@ -9,7 +9,7 @@ class MainController extends AbstractController
 	public function index()
 	{
 		if ($this->isUserSet()) {
-			return $this->render('index.html.twig');
+			return $this->render('index.html');
 		}
 		$this->redirect('/user/login');
 	}
