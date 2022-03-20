@@ -3,10 +3,7 @@ $(function ($) {
 
 	const App = {
 
-		run: async function () {
-			this.todoItems = await this.getTodos();
-			this.todoTemplate = Handlebars.compile($('#todo-template').html());
-			this.footerTemplate = Handlebars.compile($('#footer-template').html());
+		render: function () {
 			$('.todo-list').html(this.todoTemplate(this.todoItems));
 			const todoCount = this.todoItems.length;
 			const activeTodoCount = this.getActiveTodos().length;
@@ -14,28 +11,32 @@ $(function ($) {
 				activeTodoCount: activeTodoCount,
 				completedTodos: todoCount - activeTodoCount
 			}));
-			$('.todo-list').on('click', '.toggle', function (e) {
-				const uuid = $(e.target).closest('li').data().id;
-				const index = this.getIndex(uuid);
-				this.todoItems[index].isCompleted = !this.todoItems[index].isCompleted;
-				localStorage.setItem('data', JSON.stringify(this.todoItems));
-				$.ajax({
-						url: '/api/patch',
-						method: 'PATCH',
-						data: JSON.stringify(this.todoItems[index]),
-						contentType: 'application/json',
-						processData: false,
-					}
-				)
-				$('.todo-list').html(this.todoTemplate(this.todoItems));
-				const todoCount = this.todoItems.length;
-				const activeTodoCount = this.getActiveTodos().length;
-				$('.footer').html(this.footerTemplate({
-					activeTodoCount: activeTodoCount,
-					completedTodos: todoCount - activeTodoCount
-				}));
-			}.bind(this))
 		},
+		run: async function () {
+			this.todoItems = await this.getTodos();
+			this.todoTemplate = Handlebars.compile($('#todo-template').html());
+			this.footerTemplate = Handlebars.compile($('#footer-template').html());
+			this.render();
+
+			$('.todo-list').on('click', '.toggle', this.togleTask.bind(this));
+		},
+
+		togleTask: function (e) {
+			const uuid = $(e.target).closest('li').data().id;
+			const index = this.getIndex(uuid);
+			this.todoItems[index].isCompleted = !this.todoItems[index].isCompleted;
+			localStorage.setItem('data', JSON.stringify(this.todoItems));
+			$.ajax({
+					url: '/api/patch',
+					method: 'PATCH',
+					data: JSON.stringify(this.todoItems[index]),
+					contentType: 'application/json',
+					processData: false,
+				}
+			)
+			this.render();
+		},
+
 		getActiveTodos() {
 			return this.todoItems.filter(todo => {
 				return !todo.isCompleted;
