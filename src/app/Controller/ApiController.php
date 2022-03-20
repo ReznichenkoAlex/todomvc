@@ -75,8 +75,7 @@ class ApiController extends AbstractController
 		}
 
 		$data  = json_decode(file_get_contents(self::JSON_BODY));
-		$error = $this->validJson($data);
-		if (!$error) {
+		if (!empty($data->uuid)) {
 			try {
 				$this->deleteTask($data->uuid);
 			} catch (Exception $e) {
@@ -189,7 +188,8 @@ class ApiController extends AbstractController
 		/** @var Task $task */
 		$task = $repo->findOneBy(['uuid' => $uuid]);
 
-		$em->remove($task);
+		$task->setIsDeleted(true);
+		$em->persist($task);
 		$em->flush();
 	}
 
