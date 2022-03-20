@@ -1,6 +1,16 @@
-(function (window) {
+$(function ($) {
 	'use strict';
 
-	// Your starting point. Enjoy the ride!
+	const App = {
+		todoItems: [],
 
-})(window);
+		run: async function () {
+
+			const res = await $.getJSON('/api/get');
+			this.todoItems = res.data;
+
+		}
+	}
+
+	App.run();
+});
