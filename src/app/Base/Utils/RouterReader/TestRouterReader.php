@@ -14,34 +14,34 @@ class TestRouterReader implements RouterReaderInterface
 	public function parseRoutes(): array
     {
         return [
-            '/'     => [
+            ''     => [
                 'controller' => 'App\Controller\MainController',
                 'action'     => 'index'
             ],
-            '/user/register' => [
+            'user/register' => [
                 'controller' => 'App\Controller\AuthController',
                 'action' => 'register'
             ],
-            '/user/login' => [
+            'user/login' => [
                 'controller' => 'App\Controller\AuthController',
                 'action' => 'login'
             ],
-            '/api/get' => [
+            'api/get' => [
                 'controller' => 'App\Controller\ApiController',
                 'action'     => 'get',
 				'method' => 'GET'
             ],
-            '/api/post' => [
+            'api/post' => [
                 'controller' => 'App\Controller\ApiController',
                 'action'     => 'post',
 				'method' => 'POST'
             ],
-            '/api/patch' => [
+            'api/patch' => [
                 'controller' => 'App\Controller\ApiController',
                 'action'     => 'patch',
 				'method' => 'PATCH'
             ],
-            '/api/delete' => [
+            'api/delete' => [
                 'controller' => 'App\Controller\ApiController',
                 'action'     => 'delete',
 				'method' => 'DELETE'

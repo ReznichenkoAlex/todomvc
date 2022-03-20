@@ -58,7 +58,7 @@ abstract class AbstractController
 	{
 		$id = $_SESSION['id'] ?? null;
 		if ($id) {
-			$em   = $this->getDoctrine();
+			$em         = $this->getDoctrine();
 			$userObject = $em->getRepository(User::class)->find($id);
 			if ($userObject) {
 				$this->user = $userObject;
@@ -68,10 +68,14 @@ abstract class AbstractController
 		return false;
 	}
 
-	protected function jsonResponse($data)
+	protected function jsonResponse($data, $message = '', $status = 200)
 	{
 		Header('Content-Type: application/json; charset=utf-8');
-		return json_encode($data);
+		http_response_code($status);
+		return json_encode([
+							   'message' => $message,
+							   'data'    => $data
+						   ]);
 	}
 
 	protected function emitUnauthorized()

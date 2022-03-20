@@ -31,18 +31,20 @@ class ApiController extends AbstractController
 		}
 
 		$data = json_decode(file_get_contents(self::JSON_BODY));
-		$em   = $this->getDoctrine();
-		try {
-			$user = $em->getRepository(User::class)->find($_SESSION['id']);
-		} catch (Exception $e) {
-			return $this->jsonResponse(['message' => $e->getMessage()]);
+		$error = $this->validJson($data);
+		if (!$error) {
+			$em   = $this->getDoctrine();
+			try {
+				$user = $em->getRepository(User::class)->find($_SESSION['id']);
+				$this->createTask($user, $data, $em);
+			} catch (Exception $e) {
+				return $this->jsonResponse([],$e->getMessage(), 500);
+			}
+
+			return $this->jsonResponse($this->getActiveTasks($user));
+		} else {
+			return $this->jsonResponse([], 'uuid or title is empty', 500);
 		}
-
-		$this->createTask($user, $data, $em);
-
-		$tasks = $this->getActiveTasks($user);
-
-		return $this->jsonResponse($tasks);
 	}
 
 	public function patch()
@@ -52,14 +54,21 @@ class ApiController extends AbstractController
 		}
 
 		$data = json_decode(file_get_contents(self::JSON_BODY));
+		$error = $this->validJson($data);
+		if(!$error) {
+			try {
+				$this->updateTask($data);
+			} catch (Exception $e) {
+				return $this->jsonResponse([],$e->getMessage(), 500);
+			}
 
-		try {
-			$this->updateTask($data);
-		} catch (Exception $e) {
-			return $this->jsonResponse(['message' => $e->getMessage()]);
+			return $this->jsonResponse($this->getActiveTasks($this->user));
+		} else {
+			return $this->jsonResponse([], 'uuid or title is empty', 500);
 		}
 
-		return $this->jsonResponse($this->getActiveTasks($this->user));
+
+
 	}
 
 	public function delete()
@@ -69,14 +78,19 @@ class ApiController extends AbstractController
 		}
 
 		$data = json_decode(file_get_contents(self::JSON_BODY));
+		$error = $this->validJson($data);
+		if (!$error) {
+			try {
+				$this->deleteTask($data->uuid);
+			} catch (Exception $e) {
+				return $this->jsonResponse([],$e->getMessage(), 500);
+			}
 
-		try {
-			$this->deleteTask($data->uuid);
-		} catch (Exception $e) {
-			return $this->jsonResponse(['message' => $e->getMessage()]);
+			return $this->jsonResponse($this->getActiveTasks($this->user));
+		} else {
+			return $this->jsonResponse([], 'uuid is empty', 500);
 		}
 
-		return $this->jsonResponse($this->getActiveTasks($this->user));
 	}
 
 	private function getJsonArray(array $tasks): array
@@ -181,6 +195,23 @@ class ApiController extends AbstractController
 
 		$em->remove($task);
 		$em->flush();
+	}
+
+	private function validJson($data)
+	{
+		$error = false;
+		if (empty($data->uuid) || empty($data->title)) {
+			$error = true;
+		}
+
+		if(isset($data->uuid) && !is_string($data->uuid)) {
+			$error = true;
+		}
+
+		if(isset($data->title) && !is_string($data->title)) {
+			$error = true;
+		}
+		return $error;
 	}
 
 
