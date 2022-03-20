@@ -12,13 +12,30 @@ $(function ($) {
 				completedTodos: todoCount - activeTodoCount
 			}));
 		},
-		run: async function () {
+
+		deleteTask: function (e) {
+				const uuid = $(e.target).closest('li').data().id;
+				const index = this.getIndex(uuid);
+				this.todoItems.splice(index, 1);
+				localStorage.setItem('data', JSON.stringify(this.todoItems));
+				$.ajax({
+						url: '/api/delete',
+						method: 'DELETE',
+						data: JSON.stringify({uuid: uuid}),
+						contentType: 'application/json',
+						processData: false,
+					}
+				)
+				this.render();
+		}, run: async function () {
 			this.todoItems = await this.getTodos();
 			this.todoTemplate = Handlebars.compile($('#todo-template').html());
 			this.footerTemplate = Handlebars.compile($('#footer-template').html());
 			this.render();
 
-			$('.todo-list').on('click', '.toggle', this.togleTask.bind(this));
+			$('.todo-list')
+				.on('click', '.toggle', this.togleTask.bind(this))
+				.on('click', '.destroy', this.deleteTask.bind(this));
 		},
 
 		togleTask: function (e) {
@@ -37,21 +54,21 @@ $(function ($) {
 			this.render();
 		},
 
-		getActiveTodos() {
+		getActiveTodos: function () {
 			return this.todoItems.filter(todo => {
 				return !todo.isCompleted;
 			});
 		},
-		async getTodos() {
+		getTodos: async function () {
 			let data = JSON.parse(localStorage.getItem('data'));
-			if (!data) {
+			if (!data || data.length === 0) {
 				const res = await $.getJSON('/api/get');
 				data = res.data;
 				localStorage.setItem('data', JSON.stringify(data));
 			}
 			return data;
 		},
-		getIndex(uuid) {
+		getIndex: function (uuid) {
 			let todos = this.todoItems
 			let i = todos.length;
 
