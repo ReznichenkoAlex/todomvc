@@ -21,7 +21,11 @@ class ApiController extends AbstractController
 
 		$tasks = $this->getActiveTasks($this->user);
 
-		return $this->jsonResponse($tasks);
+		if ($tasks) {
+			return $this->jsonResponse($tasks);
+		} else {
+			return $this->jsonResponse($tasks, 'no tasks');
+		}
 	}
 
 	public function post()
@@ -149,7 +153,7 @@ class ApiController extends AbstractController
 		if ($tasks) {
 			return $this->getJsonArray($tasks);
 		} else {
-			return ['message' => 'no tasks'];
+			return [];
 		}
 	}
 
