@@ -9,7 +9,7 @@ $(function ($) {
 
 	const App = {
 		run: async function () {
-			this.todoItems = await this.getTodos();
+			this.todoItems = await this.getTasks();
 			this.todoTemplate = Handlebars.compile($('#todo-template').html());
 			this.footerTemplate = Handlebars.compile($('#footer-template').html());
 			this.filter = 'all';
@@ -22,10 +22,10 @@ $(function ($) {
 
 			$('.todo-list').html(this.todoTemplate(todos));
 			$('.main').toggle(todos.length > 0);
-			$('.toggle-all').prop('checked', this.getActiveTodos().length === 0);
+			$('.toggle-all').prop('checked', this.getActiveTasks().length === 0);
 
 			const todoCount = this.todoItems.length;
-			const activeTodoCount = this.getActiveTodos().length;
+			const activeTodoCount = this.getActiveTasks().length;
 
 			$('.footer').toggle(this.todoItems.length > 0).html(this.footerTemplate({
 				activeTodoCount: activeTodoCount,
@@ -53,7 +53,7 @@ $(function ($) {
 
 		getFilteredTodos: function () {
 			if (this.filter === 'active') {
-				return this.getActiveTodos();
+				return this.getActiveTasks();
 			}
 			if (this.filter === 'completed') {
 				return this.getCompletedTasks();
@@ -68,13 +68,13 @@ $(function ($) {
 			});
 		},
 
-		getActiveTodos: function () {
+		getActiveTasks: function () {
 			return this.todoItems.filter(todo => {
 				return !todo.isCompleted;
 			});
 		},
 
-		getTodos: async function () {
+		getTasks: async function () {
 			let data = JSON.parse(localStorage.getItem('data'));
 			if (!data || data.length === 0) {
 				const res = await $.getJSON('/api/get');
@@ -137,7 +137,7 @@ $(function ($) {
 			this.getCompletedTasks().forEach(todo => {
 				this.sendAjaxJson('api/delete', {uuid: todo.uuid}, 'DELETE');
 			});
-			this.todoItems = this.getActiveTodos();
+			this.todoItems = this.getActiveTasks();
 			this.render();
 		},
 
