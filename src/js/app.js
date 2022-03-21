@@ -10,28 +10,23 @@ $(function ($) {
 			const activeTodoCount = this.getActiveTodos().length;
 
 			$('.main').toggle(todoCount > 0);
+			$('.toggle-all').prop('checked', activeTodoCount === 0);
+
 
 			$('.footer').toggle(todoCount > 0).html(this.footerTemplate({
 				activeTodoCount: activeTodoCount,
 				completedTodos: todoCount - activeTodoCount
 			}));
-
+			localStorage.setItem('data', JSON.stringify(this.todoItems));
+			$('.new-todo').focus();
 		},
 
 		deleteTask: function (e) {
 			const uuid = $(e.target).closest('li').data().id;
 			const index = this.getIndex(uuid);
 			this.todoItems.splice(index, 1);
-			localStorage.setItem('data', JSON.stringify(this.todoItems));
-			$.ajax({
-					url: '/api/delete',
-					method: 'DELETE',
-					data: JSON.stringify({uuid: uuid}),
-					contentType: 'application/json',
-					processData: false,
-				}
-			)
 			this.render();
+			this.sendAjaxJson('api/delete', {uuid: uuid}, 'DELETE');
 		},
 
 		run: async function () {
@@ -40,13 +35,22 @@ $(function ($) {
 			this.footerTemplate = Handlebars.compile($('#footer-template').html());
 			this.render();
 
-			$('.new-todo').on()
+			$('.new-todo').on();
 
 			$('.todo-list')
 				.on('click', '.toggle', this.togleTask.bind(this))
 				.on('click', '.destroy', this.deleteTask.bind(this));
 
 			$('.toggle-all').on('click', this.toggleAll.bind(this));
+			$('.clear-completed').on('click', this.deleteCompletedTasks.bind(this));
+		},
+
+		deleteCompletedTasks: function() {
+			this.getCompletedTasks().forEach(todo => {
+				this.sendAjaxJson('api/delete', {uuid: todo.uuid}, 'DELETE');
+			});
+			this.todoItems = this.getActiveTodos();
+			this.render();
 		},
 
 		toggleAll: function (e) {
@@ -56,7 +60,6 @@ $(function ($) {
 				todo.isCompleted = toggleBool;
 				this.sendAjaxJson('api/patch', todo, 'PATCH');
 			})
-			localStorage.setItem('data', JSON.stringify(this.todoItems));
 			this.render();
 		},
 
@@ -75,9 +78,14 @@ $(function ($) {
 			const uuid = $(e.target).closest('li').data().id;
 			const index = this.getIndex(uuid);
 			this.todoItems[index].isCompleted = !this.todoItems[index].isCompleted;
-			localStorage.setItem('data', JSON.stringify(this.todoItems));
 			this.sendAjaxJson('api/patch', this.todoItems[index], 'PATCH');
 			this.render();
+		},
+
+		getCompletedTasks: function () {
+			return this.todoItems.filter(todo => {
+				return todo.isCompleted;
+			});
 		},
 
 		getActiveTodos: function () {
