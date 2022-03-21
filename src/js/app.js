@@ -8,6 +8,9 @@ $(function ($) {
 
 			const todoCount = this.todoItems.length;
 			const activeTodoCount = this.getActiveTodos().length;
+
+			$('.main').toggle(todoCount > 0);
+
 			$('.footer').toggle(todoCount > 0).html(this.footerTemplate({
 				activeTodoCount: activeTodoCount,
 				completedTodos: todoCount - activeTodoCount
@@ -29,15 +32,43 @@ $(function ($) {
 				}
 			)
 			this.render();
-		}, run: async function () {
+		},
+
+		run: async function () {
 			this.todoItems = await this.getTodos();
 			this.todoTemplate = Handlebars.compile($('#todo-template').html());
 			this.footerTemplate = Handlebars.compile($('#footer-template').html());
 			this.render();
 
+			$('.new-todo').on()
+
 			$('.todo-list')
 				.on('click', '.toggle', this.togleTask.bind(this))
 				.on('click', '.destroy', this.deleteTask.bind(this));
+
+			$('.toggle-all').on('click', this.toggleAll.bind(this));
+		},
+
+		toggleAll: function (e) {
+			let toggleBool = $(e.target).prop('checked');
+
+			this.todoItems.forEach(todo => {
+				todo.isCompleted = toggleBool;
+				this.sendAjaxJson('api/patch', todo, 'PATCH');
+			})
+			localStorage.setItem('data', JSON.stringify(this.todoItems));
+			this.render();
+		},
+
+		sendAjaxJson: function (url, data, method = 'GET') {
+			$.ajax({
+					url: url,
+					method: method,
+					data: JSON.stringify(data),
+					contentType: 'application/json',
+					processData: false,
+				}
+			)
 		},
 
 		togleTask: function (e) {
@@ -45,14 +76,7 @@ $(function ($) {
 			const index = this.getIndex(uuid);
 			this.todoItems[index].isCompleted = !this.todoItems[index].isCompleted;
 			localStorage.setItem('data', JSON.stringify(this.todoItems));
-			$.ajax({
-					url: '/api/patch',
-					method: 'PATCH',
-					data: JSON.stringify(this.todoItems[index]),
-					contentType: 'application/json',
-					processData: false,
-				}
-			)
+			this.sendAjaxJson('api/patch', this.todoItems[index], 'PATCH');
 			this.render();
 		},
 
