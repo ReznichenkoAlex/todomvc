@@ -10,10 +10,10 @@ $(function ($) {
 	const App = {
 		render: function () {
 			let todos = this.getFilteredTodos();
-			$('.todo-list').html(this.todoTemplate(todos));
 
+			$('.todo-list').html(this.todoTemplate(todos));
 			$('.main').toggle(todos.length > 0);
-			$('.toggle-all').prop('checked', todos.length === 0);
+			$('.toggle-all').prop('checked', this.getActiveTodos().length === 0);
 
 			const todoCount = this.todoItems.length;
 			const activeTodoCount = this.getActiveTodos().length;
@@ -39,11 +39,10 @@ $(function ($) {
 		},
 
 		deleteTask: function (e) {
-			const uuid = $(e.target).closest('li').data().id;
-			const index = this.getIndex(uuid);
+			const index = this.getIndex(e);
+			this.sendAjaxJson('api/delete', {uuid: this.todoItems[index].uuid}, 'DELETE');
 			this.todoItems.splice(index, 1);
 			this.render();
-			this.sendAjaxJson('api/delete', {uuid: uuid}, 'DELETE');
 		},
 
 		run: async function () {
@@ -60,13 +59,48 @@ $(function ($) {
 
 			$('.todo-list')
 				.on('click', '.toggle', this.togleTask.bind(this))
-				.on('click', '.destroy', this.deleteTask.bind(this));
+				.on('click', '.destroy', this.deleteTask.bind(this))
+				.on('dblclick', 'label', this.switchEditingMode.bind(this))
+				.on('keyup', '.edit', function (e) {
+					if (e.which === 13) {
+						e.target.blur();
+					}
+					if (e.which === 27) {
+						$(e.target).data('abort', true).blur();
+					}
+				}.bind(this))
+				.on('focusout', '.edit', function (e) {
+					let el = e.target;
+					let $el = $(el);
+					let val = $el.val().trim();
+
+					if ($el.data('abort')) {
+						$el.data('abort', false);
+					} else if (!val) {
+						this.deleteTask(e);
+						return;
+					} else {
+						const index = this.getIndex(e)
+						this.todoItems[index].title = val;
+						this.sendAjaxJson('api/patch', this.todoItems[index], 'PATCH');
+					}
+
+					this.render();
+			}.bind(this));
 
 			$('.toggle-all').on('click', this.toggleAll.bind(this));
 			$('.clear-completed').on('click', this.deleteCompletedTasks.bind(this));
 			$('.filters').on('click', 'li', this.filterTasks.bind(this))
 		},
 
+		switchEditingMode: function (e) {
+			let $input = $(e.target).closest('li').addClass('editing').find('.edit');
+
+			let tmpStr = $input.val();
+			$input.val('');
+			$input.val(tmpStr);
+			$input.focus();
+		},
 
 		filterTasks: function (e) {
 			let route = $(e.target).prop('href').replace('http://localhost:8088/#/', '');
@@ -140,8 +174,7 @@ $(function ($) {
 		,
 
 		togleTask: function (e) {
-			const uuid = $(e.target).closest('li').data().id;
-			const index = this.getIndex(uuid);
+			const index = this.getIndex(e);
 			this.todoItems[index].isCompleted = !this.todoItems[index].isCompleted;
 			this.sendAjaxJson('api/patch', this.todoItems[index], 'PATCH');
 			this.render();
@@ -171,7 +204,8 @@ $(function ($) {
 			return data;
 		}
 		,
-		getIndex: function (uuid) {
+		getIndex: function (e) {
+			const uuid = $(e.target).closest('li').data().id;
 			let todos = this.todoItems
 			let i = todos.length;
 
