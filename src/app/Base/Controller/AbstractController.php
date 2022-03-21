@@ -5,7 +5,7 @@ namespace App\Base\Controller;
 use App\Base\Container\ContainerInterface;
 use App\Base\Utils\DoctrineManager;
 use App\Base\Utils\Exception\UnauthorizedException;
-use App\Base\View\View;
+use App\Base\View\ViewTwig;
 use App\Model\User;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -18,7 +18,7 @@ abstract class AbstractController
 	private function getSubscribedServices(): array
 	{
 		return [
-			'twig'     => View::class,
+			'twig'     => ViewTwig::class,
 			'doctrine' => DoctrineManager::class,
 		];
 	}

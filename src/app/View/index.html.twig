@@ -30,6 +30,7 @@
 	<p>Created by <a href="http://todomvc.com">you</a></p>
 	<p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
 </footer>
+{% verbatim %}
 <script id="todo-template" type="text/x-handlebars-template">
 	{{#each this}}
 		<li {{#if isCompleted}}class="completed"{{/if}} data-id="{{uuid}}">
@@ -58,6 +59,7 @@
 	{{#if completedTodos}}
 		<button class="clear-completed">Clear completed</button>{{/if}}
 </script>
+{% endverbatim %}
 <!-- Scripts here. Don't remove ↓ -->
 <script src="node_modules/jquery/dist/jquery.min.js"></script>
 <script src="node_modules/handlebars/dist/handlebars.js"></script>
