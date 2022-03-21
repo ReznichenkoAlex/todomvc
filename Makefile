@@ -6,6 +6,6 @@ help:
 changeSrcOwner:
 	@sudo chown -R $$USER:$$USER src
 enterApp:
-	@docker exec -it docker_app_1 /bin/bash
+	@sudo docker exec -it docker_app_1 /bin/bash
 build:
-	@docker-compose -f ./docker/docker-compose.yaml up --force-recreate --build
+	@sudo docker-compose -f ./docker/docker-compose.yaml up --force-recreate --build
