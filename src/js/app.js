@@ -1,24 +1,41 @@
+
+
 $(function ($) {
 	'use strict';
 
-	const App = {
+	Handlebars.registerHelper('eq', function (a, b, options) {
+		return a === b ? options.fn(this) : options.inverse(this);
+	});
 
+	const App = {
 		render: function () {
-			$('.todo-list').html(this.todoTemplate(this.todoItems));
+			let todos = this.getFilteredTodos();
+			$('.todo-list').html(this.todoTemplate(todos));
+
+			$('.main').toggle(todos.length > 0);
+			$('.toggle-all').prop('checked', todos.length === 0);
 
 			const todoCount = this.todoItems.length;
 			const activeTodoCount = this.getActiveTodos().length;
 
-			$('.main').toggle(todoCount > 0);
-			$('.toggle-all').prop('checked', activeTodoCount === 0);
-
-
-			$('.footer').toggle(todoCount > 0).html(this.footerTemplate({
+			$('.footer').toggle(this.todoItems.length > 0).html(this.footerTemplate({
 				activeTodoCount: activeTodoCount,
-				completedTodos: todoCount - activeTodoCount
+				completedTodos: todoCount - activeTodoCount,
+				filter: this.filter
 			}));
 			localStorage.setItem('data', JSON.stringify(this.todoItems));
 			$('.new-todo').focus();
+		},
+
+		getFilteredTodos: function () {
+			if (this.filter === 'active') {
+				return this.getActiveTodos();
+			}
+			if (this.filter === 'completed') {
+				return this.getCompletedTasks();
+			}
+
+			return this.todoItems;
 		},
 
 		deleteTask: function (e) {
@@ -33,8 +50,12 @@ $(function ($) {
 			this.todoItems = await this.getTodos();
 			this.todoTemplate = Handlebars.compile($('#todo-template').html());
 			this.footerTemplate = Handlebars.compile($('#footer-template').html());
+			this.filter = 'all';
 			this.render();
+			this.initEvents();
+		},
 
+		initEvents: function () {
 			$('.new-todo').on('keyup', this.createTask.bind(this));
 
 			$('.todo-list')
@@ -43,6 +64,25 @@ $(function ($) {
 
 			$('.toggle-all').on('click', this.toggleAll.bind(this));
 			$('.clear-completed').on('click', this.deleteCompletedTasks.bind(this));
+			$('.filters').on('click', 'li', this.filterTasks.bind(this))
+		},
+
+
+		filterTasks: function (e) {
+			let route = $(e.target).prop('href').replace('http://localhost:8088/#/', '');
+			if (route === 'active') {
+				this.filter = 'active';
+			}
+			if (route === 'completed') {
+				this.filter = 'completed'
+			}
+			if (route === 'all' && this.filter !== 'all') {
+				this.filter = 'all';
+			}
+			if (route === 'all' && this.filter === 'all') {
+				return;
+			}
+			this.render();
 		},
 
 		createTask: function (e) {
