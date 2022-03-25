@@ -2,3 +2,4 @@
 vendor/
 volumes
 node_modules
+/src/*.lock
