@@ -13,6 +13,12 @@ class ApiController extends AbstractController
 {
 	const JSON_BODY = 'php://input';
 
+	private array $json_map = [
+		'uuid' => 'getUuid',
+		'title' => 'getTitle',
+		'isCompleted' => 'getIsCompleted',
+	];
+
 	public function get()
 	{
 		if (!$this->isUserSet()) {
@@ -94,50 +100,16 @@ class ApiController extends AbstractController
 
 	private function getJsonArray(array $tasks): array
 	{
-		$reflection = new ReflectionClass(Task::class);
-		$properties = $reflection->getProperties();
-		$methods    = $reflection->getMethods();
-
-		$methods = $this->getGetters($methods);
-		$keys    = $this->getKeys($properties);
-		return $this->MapArray($tasks, $methods, $keys);
-	}
-
-	private function getGetters(array $methods): array
-	{
-		$getters = [];
-		foreach ($methods as $method) {
-			$methodName = $method->getName();
-			if (str_contains($methodName, 'get') && $methodName !== 'getId' && $methodName !== 'getUser' && $methodName !== 'getIsDeleted') {
-				$getters[] = $method->getName();
-			}
-		}
-		return $getters;
-	}
-
-	private function getKeys(array $properties): array
-	{
-		$keys = [];
-		foreach ($properties as $property) {
-			$propertyName = $property->getName();
-			if ($propertyName !== 'id' && $propertyName !== 'user' && $propertyName !== 'isDeleted') {
-				$keys[] = $property->getName();
-			}
-		}
-		return $keys;
-	}
-
-	private function MapArray(array $tasks, array $methods, array $keys): array
-	{
 		$jsonArray = [];
+
 		foreach ($tasks as $task) {
 			$obj = [];
-			foreach ($methods as $getter) {
-				$obj[] = $task->$getter();
+			foreach ($this->json_map as $field => $method) {
+				$obj[$field] = $task->$method();
 			}
-			$obj         = array_combine($keys, $obj);
 			$jsonArray[] = $obj;
 		}
+
 		return $jsonArray;
 	}
 
